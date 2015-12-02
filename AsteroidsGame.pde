@@ -1,13 +1,29 @@
+//Distance function
+
+
 //your variable declarations here
 SpaceShip God;
 Star[] Suns = new Star[50];
+ArrayList <Asteroid> Enemies;
+float[] shipAndRockDist = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+boolean won = false;
+//Asteroid Enemy;
+//float shipAndEnemyDist;
 public void setup()
 {
   //your code here
-  size(666, 666);
+  size(700, 700);
   God = new SpaceShip(width/2, height/2);
   for(int i = 0; i < Suns.length; i++)
     Suns[i] = new Star((int)(Math.random()*width), (int)(Math.random()*height));
+  Enemies = new ArrayList <Asteroid>();
+  for(int i = 0; i < 10; i++)
+  {
+    Enemies.add(new Asteroid((int)(Math.random()*width), (int)(Math.random()*height), (int)(Math.random()*3)+1));
+  }
+  // Enemy = new Asteroid(width/3, height/3, (int)(Math.random()*3)+1);
+  // shipAndEnemyDist = dist(God.getX(), God.getY(), Enemy.getX(), Enemy.getY());
+  // System.out.println((int)shipAndEnemyDist);
 }
 public void draw()
 {
@@ -18,18 +34,57 @@ public void draw()
     Suns[i].show();
     Suns[i].shine();
   }
-  God.show();
-  God.move();
-  God.limitSpeed();
-  God.fly();
-  God.turn();
-  God.fade();
-  God.hyperspace();
-  God.hyperspaceCooldown();
-  fill(255, 0, 0);
-  text((int)God.getDirectionX() + ", " + (int)God.getDirectionY(), 10, 10);
-  text(God.getAlpha(), 10, height - 10);
-  text(God.getHSCooldown(), 50, height - 10);
+  checkIfWin();
+  if(won == false)
+  {
+    for(int i = 0; i < Enemies.size(); i++)
+    {
+      shipAndRockDist[i] = dist(God.getX(), God.getY(), Enemies.get(i).getX(), Enemies.get(i).getY());
+      if(shipAndRockDist[i] < 20*Enemies.get(i).getMultiplier())
+        Enemies.remove(i);
+      else
+      {
+        Enemies.get(i).show(100, 100, 100);
+        Enemies.get(i).move();
+      }
+      System.out.println(shipAndRockDist[i]);
+      System.out.println(Enemies.size());
+    }
+    // if(shipAndEnemyDist < 30*Enemy.getMultiplier())
+    //   Enemy.setAppear(false);
+    //Enemy.show(100, 100, 100);
+    //Enemy.move();
+    God.show();
+    God.move();
+    God.limitSpeed();
+    God.fly();
+    God.turn();
+    God.fade();
+    God.hyperspace();
+    God.hyperspaceCooldown();
+    fill(255, 0, 0);
+    text((int)God.getDirectionX() + ", " + (int)God.getDirectionY(), 10, 10);
+    text(God.getAlpha(), 10, height - 10);
+    text(God.getHSCooldown(), 50, height - 10);
+    // for(int i = 0; i < Enemies.size(); i++)
+    //   text((int)Enemies.get(i).getDirectionX() + ", " + (int)Enemies.get(i).getDirectionX(), Enemies.get(i).getX(), Enemies.get(i).getY());
+  }
+  else
+  {
+    God.show();
+    God.move();
+    God.limitSpeed();
+    God.fly();
+    God.turn();
+    God.fade();
+    God.hyperspace();
+    textAlign(CENTER,CENTER);
+    textSize(50);
+    fill(0, 255, 0);
+    text("You Won!", width/2, height/2);
+    textSize(20);
+    text("(Though, it's impossible to lose...)", width/2, 50+(height/2));
+  }
 }
 public void keyPressed()
 {
@@ -57,6 +112,14 @@ public void keyReleased()
     God.setLeftTurn(false);
   else if(key == 'd')
     God.setRightTurn(false);
+}
+public boolean checkIfWin()
+{
+  if(Enemies.size() > 0)
+    won = false;
+  else
+    won = true;
+  return won;
 }
 class SpaceShip extends Floater
 {
@@ -191,13 +254,15 @@ public class Star extends Floater
     int[] yList = {-6*multiplier, -2*multiplier, -2*multiplier, 1*multiplier, 6*multiplier, 3*multiplier, 6*multiplier, 1*multiplier, -2*multiplier, -2*multiplier};
     xCorners = xList;
     yCorners = yList;
-    myColor = color(255, 255, 255, (int)(Math.random()*245)+10);
+    myColor = color(218, 165, 32, (int)(Math.random()*245)+10);
     myCenterX = centerX;
     myCenterY = centerY;
     myDirectionX = 0;
     myDirectionY = 0;
     myPointDirection = (int)(Math.random()*360);
   }
+  public void setMultiplier(int n) {multiplier = n;}
+  public int getMultiplier() {return multiplier;}
   public void setX(int x) {myCenterX = x;}
   public int getX() {return (int)myCenterX;}
   public void setY(int y) {myCenterY = y;}
@@ -210,9 +275,112 @@ public class Star extends Floater
   public double getPointDirection() {return myPointDirection;}
   public void shine()
   {
-    fill(255, 255, 255, (int)(Math.random()*150));
-    stroke(255, 255, 255, (int)(Math.random()*150));
+    fill(218, 165, 32, (int)(Math.random()*150));
+    stroke(218, 165, 32, (int)(Math.random()*150));
     ellipse((float)myCenterX, (float)myCenterY, multiplier*20, multiplier*20);
+  }
+}
+public class Asteroid extends Floater
+{
+  //Member variables
+  private int myMultiplier, myRotSpeed, myReverse, myNewReverse;
+  private boolean myAppear;
+  //Member Methods
+  Asteroid(double centerX, double centerY, int multiplier)
+  {
+    myMultiplier = multiplier;
+    myRotSpeed = (int)(Math.random()*5)+6;
+    myReverse = (int)(Math.random()*2);
+    myAppear = true;
+    corners = 13;
+    int[] xList = {2*myMultiplier, 9*myMultiplier, 13*myMultiplier, 16*myMultiplier, 17*myMultiplier, 11*myMultiplier, 7*myMultiplier, 0*myMultiplier, -6*myMultiplier, -14*myMultiplier, -17*myMultiplier, -11*myMultiplier, -4*myMultiplier};
+    int[] yList = {-10*myMultiplier, -10*myMultiplier, -6*myMultiplier, 1*myMultiplier, 6*myMultiplier, 9*myMultiplier, 13*myMultiplier, 14*myMultiplier, 12*myMultiplier, 6*myMultiplier, -4*myMultiplier, -11*myMultiplier, -15*myMultiplier};
+    xCorners = xList;
+    yCorners = yList;
+    myColor = color(64, 64, 64);
+    myCenterX = centerX;
+    myCenterY = centerY;
+    myDirectionX = (int)(Math.random()*(9/multiplier))-(multiplier*1.5);
+    myDirectionY = (int)(Math.random()*(9/multiplier))-(multiplier*1.5);
+    myPointDirection = (int)(Math.random()*360);
+  }
+  public void setMultiplier(int n) {myMultiplier = n;}
+  public int getMultiplier() {return myMultiplier;}
+  public void setRotSpeed(int degrees) {myRotSpeed = degrees;}
+  public int getRotSpeed() {return myRotSpeed;}
+  public void setReverse(int n) {myReverse = n;}
+  public int getReverse() {return myReverse;}
+  public void setNewReverse(int n) {myNewReverse = n;}
+  public int getNewReverse() {return myNewReverse;}
+  public void setAppear(boolean alive) {myAppear = alive;}
+  public boolean getAppear() {return myAppear;}
+  public void setX(int x) {myCenterX = x;}
+  public int getX() {return (int)myCenterX;}
+  public void setY(int y) {myCenterY = y;}
+  public int getY() {return (int)myCenterY;}
+  public void setDirectionX(double x) {myDirectionX = x;}
+  public double getDirectionX() {return myDirectionX;}
+  public void setDirectionY(double y) {myDirectionY = y;}
+  public double getDirectionY() {return myDirectionY;}
+  public void setPointDirection(int degrees) {myPointDirection = degrees;}
+  public double getPointDirection() {return myPointDirection;}
+  public int newReverse()
+  {
+    if(myReverse%2 == 0)
+      myNewReverse = -1;
+    else if(myReverse%2 == 1)
+      myNewReverse = 1;
+    return myNewReverse;
+  }
+  public void move()
+  {
+    if(myAppear != false)
+    {
+      newReverse();
+      rotate(myRotSpeed*myNewReverse);
+      //change the x and y coordinates by myDirectionX and myDirectionY       
+      myCenterX += myDirectionX*myNewReverse;
+      myCenterY += myDirectionY*myNewReverse;
+
+      //wrap around screen    
+      if(myCenterX >width)
+      {
+        myCenterX = 0;
+      }
+      else if (myCenterX<0)
+      {
+        myCenterX = width;
+      }
+      if(myCenterY >height)
+      {
+        myCenterY = 0;
+      }
+      else if (myCenterY < 0)
+      {
+        myCenterY = height;
+      }
+    }
+  }
+  public void show(int color1, int color2, int color3)
+  {
+    if(myAppear != false)
+    {
+      int otherColor = color(color1, color2, color3);
+      fill(myColor);   
+      stroke(otherColor);    
+      //convert degrees to radians for sin and cos         
+      double dRadians = myPointDirection*(Math.PI/180);                 
+      int xRotatedTranslated, yRotatedTranslated;    
+      beginShape();         
+      for(int nI = 0; nI < corners; nI++)    
+      {     
+        //rotate and translate the coordinates of the floater using current direction 
+        xRotatedTranslated = (int)((xCorners[nI]* Math.cos(dRadians)) - (yCorners[nI] * Math.sin(dRadians))+myCenterX);     
+        yRotatedTranslated = (int)((xCorners[nI]* Math.sin(dRadians)) + (yCorners[nI] * Math.cos(dRadians))+myCenterY);      
+        vertex(xRotatedTranslated,yRotatedTranslated);    
+      }   
+      endShape(CLOSE);
+    }
   }
 }
 abstract class Floater //Do NOT modify the Floater class! Make changes in the SpaceShip class 
